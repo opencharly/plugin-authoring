@@ -38,3 +38,45 @@ plugin-authoring:
               context:
                 - build
               command: "true"
+authoring-skill:
+    skill:
+        name: authoring
+        family: authoring
+        owner: plugin-authoring
+        description: |-
+            The `charly box` authoring verbs — `set`, `add-candy`, `rm-candy`, `write`, `cat`,
+            `fetch`, `refresh`. Use to mutate boxes/box manifests programmatically, fetch remote
+            refs, and refresh a project.
+        triggers:
+            - "`charly box set` / `charly box add-candy` / `charly box rm-candy` / `charly box write` / `charly box cat` / `charly box fetch` / `charly box refresh`"
+        content: |
+            # charly box authoring — programmatic box-manifest mutation
+
+            `candy/plugin-authoring` (`command:authoring`) serves the box-authoring verbs. They
+            mutate `box/<name>/charly.yml` safely instead of hand-editing YAML.
+
+            ## Command tree
+
+            - `charly box set <path> <value>` — set a dot-path value (value parsed as YAML).
+            - `charly box add-candy <box> <candy>` — add a candy to a box's composition.
+            - `charly box rm-candy <box> <candy>` — remove a candy.
+            - `charly box write <path> [--content X | --from-stdin]` — write a relative path.
+            - `charly box cat <path>` — print a relative path.
+            - `charly box fetch` — fetch remote `@github` refs (host-coupled repo resolver over
+              the reverse channel, `HostBuild("box-fetch-resolve")`).
+            - `charly box refresh` — refresh the project's resolved state.
+
+            `set`/`add-candy`/`rm-candy`/`write`/`cat` run entirely on `sdk/kit` + stdlib;
+            `fetch` and `refresh` reach the host-coupled repo resolver.
+
+            ## When to use it
+
+            To change a box manifest programmatically (schema- and shape-aware), resolve remote
+            refs, or refresh a project's state.
+
+            ## Cross-References
+
+            - `/charly-image:image` — box composition and charly.yml shapes.
+            - `/charly-image:layer` — candy authoring.
+            - `/charly-candy:candy` — the candy-level authoring verbs.
+            - `/charly-build:build` — building the composed result.
