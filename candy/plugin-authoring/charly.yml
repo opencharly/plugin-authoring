@@ -78,5 +78,4 @@ authoring-skill:
 
             - `/charly-image:image` — box composition and charly.yml shapes.
             - `/charly-image:layer` — candy authoring.
-            - `/charly-candy:candy` — the candy-level authoring verbs.
             - `/charly-build:build` — building the composed result.
