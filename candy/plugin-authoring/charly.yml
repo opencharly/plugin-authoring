@@ -27,6 +27,13 @@ plugin-authoring:
                 - command:cat
             source: github.com/opencharly/plugin-authoring/candy/plugin-authoring
         plan:
+            - check: the authoring-skill skill entity is present in this candy's manifest (fails if the entity is removed)
+              id: authoring-skill-present
+              context:
+                - build
+              command: |
+                  command: grep -q '^authoring-skill:' charly.yml
+                  in_container: false
             - # ADE check: a deterministic build-context check that does NOT depend on the host
               # reverse channel the `charly box fetch`/`refresh` handlers need (the prescan finds
               # this candy from the project dir). It mirrors candy/plugin-box / candy/plugin-alias —
