@@ -31,9 +31,7 @@ plugin-authoring:
               id: authoring-skill-present
               context:
                 - build
-              command: |
-                  command: grep -q '^authoring-skill:' charly.yml
-                  in_container: false
+              command: "grep -q '^authoring-skill:' charly.yml"
             - # ADE check: a deterministic build-context check that does NOT depend on the host
               # reverse channel the `charly box fetch`/`refresh` handlers need (the prescan finds
               # this candy from the project dir). It mirrors candy/plugin-box / candy/plugin-alias —
