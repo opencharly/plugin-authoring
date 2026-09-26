@@ -18,13 +18,13 @@ plugin-authoring:
             into charly or serves out-of-process.
         plugin:
             providers:
-                - command:set
-                - command:add-candy
-                - command:rm-candy
-                - command:fetch
-                - command:refresh
-                - command:write
-                - command:cat
+                - command:set:box
+                - command:add-candy:box
+                - command:rm-candy:box
+                - command:fetch:box
+                - command:refresh:box
+                - command:write:box
+                - command:cat:box
             source: github.com/opencharly/plugin-authoring/candy/plugin-authoring
         plan:
             - check: the authoring-skill skill entity is present in this candy's manifest (fails if the entity is removed)
