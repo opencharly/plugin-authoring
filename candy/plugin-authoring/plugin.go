@@ -62,8 +62,10 @@ func NewProvider() pb.ProviderServer { return &provider{} }
 // grammar + dispatches Invoke(OpRun)). A command's args are pass-through CLI tokens, not a
 // structured plugin_input, so the capabilities carry no InputDef and the plugin ships no
 // schema. The PARENT (`box`) is part of each capability's IDENTITY (CommandParent), carried on
-// the wire so charly keys command:<word>:box identically compiled-in and out-of-process — no
-// Go-interface parent sniff.
+// the wire so a charly that reads the field keys command:<word>:box identically compiled-in and
+// out-of-process. The Go `CommandParent()` method below is RETAINED and returns the SAME value,
+// so the currently-shipped charly (which reads the method) keeps nesting correctly; the test
+// pins that the two agree.
 func NewMeta() pb.PluginMetaServer {
 	caps := make([]sdk.ProvidedCapability, 0, len(authoringCommandWords))
 	for _, w := range authoringCommandWords {
