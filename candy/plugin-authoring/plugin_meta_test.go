@@ -9,15 +9,20 @@ import (
 
 // TestNewMeta_DeclaresBoxParent proves Describe advertises every authoring command word
 // with CommandParent=="box" — the capability IDENTITY (`command:<word>:box`) that charly
-// keys the provider at. This FAILS on the pre-change code, which declared no command_parent
-// and relied on a Go-interface sniff: the declaration is the thing under test, and it is
-// asserted over the wire (Describe), not inferred.
+// keys the provider at. This FAILS on the pre-change code, which declared no command_parent:
+// the wire field is the thing under test, asserted over the wire (Describe), not inferred.
+//
+// It also pins the expand/contract AGREEMENT: the retained CommandParent() method (read by
+// a charly predating the wire field) and the wire field name the SAME parent.
 func TestNewMeta_DeclaresBoxParent(t *testing.T) {
+	if got := (provider{}).CommandParent(); got != authoringCommandParent {
+		t.Fatalf("retained CommandParent() = %q, want %q (must agree with the wire field)", got, authoringCommandParent)
+	}
 	caps, err := NewMeta().Describe(context.Background(), &pb.Empty{})
 	if err != nil {
 		t.Fatalf("Describe: %v", err)
 	}
-	got := map[string]bool{}
+	words := map[string]bool{}
 	for _, c := range caps.GetProvided() {
 		if c.GetClass() != "command" {
 			t.Errorf("capability %s:%s is not class command", c.GetClass(), c.GetWord())
@@ -25,11 +30,11 @@ func TestNewMeta_DeclaresBoxParent(t *testing.T) {
 		if c.GetCommandParent() != authoringCommandParent {
 			t.Errorf("command:%s must declare command_parent %q (its identity), got %q", c.GetWord(), authoringCommandParent, c.GetCommandParent())
 		}
-		got[c.GetWord()] = true
+		words[c.GetWord()] = true
 	}
 	for _, want := range authoringCommandWords {
-		if !got[want] {
-			t.Errorf("Describe missing command:%s (got %v)", want, got)
+		if !words[want] {
+			t.Errorf("Describe missing command:%s (got %v)", want, words)
 		}
 	}
 	if len(caps.GetProvided()) != len(authoringCommandWords) {
