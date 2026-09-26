@@ -11,13 +11,7 @@ import (
 // with CommandParent=="box" — the capability IDENTITY (`command:<word>:box`) that charly
 // keys the provider at. This FAILS on the pre-change code, which declared no command_parent:
 // the wire field is the thing under test, asserted over the wire (Describe), not inferred.
-//
-// It also pins the expand/contract AGREEMENT: the retained CommandParent() method (read by
-// a charly predating the wire field) and the wire field name the SAME parent.
 func TestNewMeta_DeclaresBoxParent(t *testing.T) {
-	if got := (provider{}).CommandParent(); got != authoringCommandParent {
-		t.Fatalf("retained CommandParent() = %q, want %q (must agree with the wire field)", got, authoringCommandParent)
-	}
 	caps, err := NewMeta().Describe(context.Background(), &pb.Empty{})
 	if err != nil {
 		t.Fatalf("Describe: %v", err)

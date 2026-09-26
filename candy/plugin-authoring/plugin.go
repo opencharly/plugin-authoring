@@ -4,7 +4,7 @@
 // charly in-process when listed in compiled_plugins (the canonical placement, P14b), or
 // cmd/serve serves them OUT-OF-PROCESS when they are not.
 //
-// It serves SEVEN command capabilities, all NESTED under the `box` parent (CommandParent()=="box",
+// It serves SEVEN command capabilities, all NESTED under the `box` parent (declared identity `command:<word>:box`,
 // so `charly box set/add-candy/rm-candy/fetch/refresh/write/cat` parse + dispatch here while the
 // retained core BoxCmd verbs — build/merge/pull/labels/feature/reconcile — stay in core, and the
 // P15 candy/plugin-box owns generate/validate/new/inspect/list):
@@ -62,10 +62,7 @@ func NewProvider() pb.ProviderServer { return &provider{} }
 // grammar + dispatches Invoke(OpRun)). A command's args are pass-through CLI tokens, not a
 // structured plugin_input, so the capabilities carry no InputDef and the plugin ships no
 // schema. The PARENT (`box`) is part of each capability's IDENTITY (CommandParent), carried on
-// the wire so a charly that reads the field keys command:<word>:box identically compiled-in and
-// out-of-process. The Go `CommandParent()` method below is RETAINED and returns the SAME value,
-// so the currently-shipped charly (which reads the method) keeps nesting correctly; the test
-// pins that the two agree.
+// the wire so charly keys command:<word>:box identically compiled-in and out-of-process.
 func NewMeta() pb.PluginMetaServer {
 	caps := make([]sdk.ProvidedCapability, 0, len(authoringCommandWords))
 	for _, w := range authoringCommandWords {
@@ -85,15 +82,6 @@ func CliMain(_ []string) int {
 }
 
 type provider struct{ pb.UnimplementedProviderServer }
-
-// CommandParent is RETAINED during the transition (expand/contract): a charly that predates
-// the wire `command_parent` reads the parent from this method, so keeping it makes this
-// additive change safe against the still-shipping charly while the wire field below carries
-// the SAME declared parent (`box`). charly at the `feat/command-parent-identity` leg reads
-// the DECLARED wire field instead and no longer sniffs this; the method is then removed by
-// the contract leg once charly no longer reads it. Both forms name the one parent —
-// `authoringCommandParent` — so they cannot disagree.
-func (provider) CommandParent() string { return authoringCommandParent }
 
 // Invoke serves the authoring commands' Invoke(OpRun): recover the reverse-channel executor,
 // decode the pass-through args, dispatch by the reserved command word. In-proc dispatch runs in
