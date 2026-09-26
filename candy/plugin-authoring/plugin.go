@@ -4,7 +4,7 @@
 // charly in-process when listed in compiled_plugins (the canonical placement, P14b), or
 // cmd/serve serves them OUT-OF-PROCESS when they are not.
 //
-// It serves SEVEN command capabilities, all NESTED under the `box` parent (CommandParent()=="box",
+// It serves SEVEN command capabilities, all NESTED under the `box` parent (declared identity `command:<word>:box`,
 // so `charly box set/add-candy/rm-candy/fetch/refresh/write/cat` parse + dispatch here while the
 // retained core BoxCmd verbs — build/merge/pull/labels/feature/reconcile — stay in core, and the
 // P15 candy/plugin-box owns generate/validate/new/inspect/list):
@@ -45,6 +45,11 @@ import (
 // calver is the candy's identity CalVer (advertised over Describe).
 const calver = "2026.196.0000"
 
+// authoringCommandParent is the CLI command group every word below NESTS under — part of each
+// capability's declared IDENTITY (command:<word>:box), keyed distinctly by charly's provider
+// registry and the generated word→ref index.
+const authoringCommandParent = "box"
+
 // authoringCommandWords is the set of command words this plugin serves — all nested under `box`.
 var authoringCommandWords = []string{"set", "add-candy", "rm-candy", "fetch", "refresh", "write", "cat"}
 
@@ -52,15 +57,16 @@ var authoringCommandWords = []string{"set", "add-candy", "rm-candy", "fetch", "r
 // out-of-proc serving.
 func NewProvider() pb.ProviderServer { return &provider{} }
 
-// NewMeta advertises command:set/add-candy/rm-candy/fetch/refresh/write/cat via sdk.NewMeta →
-// BuildCapabilities so the COMPILED-IN path registers each as a command provider (the host builds
-// its dynamic Kong grammar + dispatches Invoke(OpRun)). A command's args are pass-through CLI
-// tokens, not a structured plugin_input, so the capabilities carry no InputDef and the plugin
-// ships no schema.
+// NewMeta advertises command:set:box/add-candy:box/… via sdk.NewMeta → BuildCapabilities so
+// the COMPILED-IN path registers each as a command provider (the host builds its dynamic Kong
+// grammar + dispatches Invoke(OpRun)). A command's args are pass-through CLI tokens, not a
+// structured plugin_input, so the capabilities carry no InputDef and the plugin ships no
+// schema. The PARENT (`box`) is part of each capability's IDENTITY (CommandParent), carried on
+// the wire so charly keys command:<word>:box identically compiled-in and out-of-process.
 func NewMeta() pb.PluginMetaServer {
 	caps := make([]sdk.ProvidedCapability, 0, len(authoringCommandWords))
 	for _, w := range authoringCommandWords {
-		caps = append(caps, sdk.ProvidedCapability{Class: "command", Word: w})
+		caps = append(caps, sdk.ProvidedCapability{Class: "command", Word: w, CommandParent: authoringCommandParent})
 	}
 	return sdk.NewMeta(calver, caps, nil)
 }
@@ -76,11 +82,6 @@ func CliMain(_ []string) int {
 }
 
 type provider struct{ pb.UnimplementedProviderServer }
-
-// CommandParent is the optional interface buildUnitInProc detects on a compiled-in command
-// plugin's provider: every command word this plugin serves NESTS under the core `box` command
-// group, so `charly box set/add-candy/rm-candy/fetch/refresh/write/cat` parse + dispatch here.
-func (provider) CommandParent() string { return "box" }
 
 // Invoke serves the authoring commands' Invoke(OpRun): recover the reverse-channel executor,
 // decode the pass-through args, dispatch by the reserved command word. In-proc dispatch runs in
