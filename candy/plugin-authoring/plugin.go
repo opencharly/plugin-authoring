@@ -33,6 +33,7 @@ package authoring
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -41,6 +42,9 @@ import (
 	pb "github.com/opencharly/spec/proto"
 	"github.com/opencharly/spec/spec"
 )
+
+//go:embed schema/*.cue
+var schemaFS embed.FS
 
 // calver is the candy's identity CalVer (advertised over Describe).
 const calver = "2026.196.0000"
@@ -60,15 +64,17 @@ func NewProvider() pb.ProviderServer { return &provider{} }
 // NewMeta advertises command:set:box/add-candy:box/… via sdk.NewMeta → BuildCapabilities so
 // the COMPILED-IN path registers each as a command provider (the host builds its dynamic Kong
 // grammar + dispatches Invoke(OpRun)). A command's args are pass-through CLI tokens, not a
-// structured plugin_input, so the capabilities carry no InputDef and the plugin ships no
-// schema. The PARENT (`box`) is part of each capability's IDENTITY (CommandParent), carried on
-// the wire so charly keys command:<word>:box identically compiled-in and out-of-process.
+// structured plugin_input, so the capabilities carry no InputDef — but there is NO schema-less
+// plugin: this plugin ships its OWN self-contained CUE schema (schema/authoring.cue, embedded
+// via schemaFS) documenting its command surface, served over Describe. The PARENT (`box`) is
+// part of each capability's IDENTITY (CommandParent), carried on the wire so charly keys
+// command:<word>:box identically compiled-in and out-of-process.
 func NewMeta() pb.PluginMetaServer {
 	caps := make([]sdk.ProvidedCapability, 0, len(authoringCommandWords))
 	for _, w := range authoringCommandWords {
 		caps = append(caps, sdk.ProvidedCapability{Class: "command", Word: w, CommandParent: authoringCommandParent})
 	}
-	return sdk.NewMeta(calver, caps, nil)
+	return sdk.NewMeta(calver, caps, schemaFS)
 }
 
 // CliMain is the OUT-OF-PROCESS command entry — unreachable in the canonical compiled-in placement.
