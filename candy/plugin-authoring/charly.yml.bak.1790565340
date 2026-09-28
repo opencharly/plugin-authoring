@@ -1,5 +1,7 @@
+version: 2026.232.0520
 plugin-authoring:
     candy:
+        version: 2026.196.0000
         description: |-
             The `charly box …` AUTHORING verb handlers — a COMMAND-class charly plugin
             (github.com/opencharly/sdk), NESTED under the core `box` command group (P14b).
